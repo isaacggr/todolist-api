@@ -1,7 +1,8 @@
 package com.isaacggr.todolist.task;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/tasks")
+@CrossOrigin(origins = "http://localhost:8080")
 public class TaskController {
 
     @Autowired
@@ -26,12 +28,8 @@ public class TaskController {
             var idUser = request.getAttribute("idUser");
             taskModel.setIdUser(idUser.toString());
 
-            var currentDate = LocalDateTime.now();
-            if (currentDate.isAfter(taskModel.getStartAt()) || currentDate.isAfter(taskModel.getEndAt())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Data de início ou término não pode ser anterior à data atual");
-            }
-            if (taskModel.getStartAt().isAfter(taskModel.getEndAt())) {
+            // Validar apenas que data de início seja antes da data de término
+            if (taskModel.getStartAt().after(taskModel.getEndAt())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Data de início deve ser menor do que a data de término");
             }
@@ -77,17 +75,17 @@ public class TaskController {
             
             // Validar datas apenas se ambas forem fornecidas
             if (taskModel.getStartAt() != null && taskModel.getEndAt() != null) {
-                if (taskModel.getStartAt().isAfter(taskModel.getEndAt())) {
+                if (taskModel.getStartAt().after(taskModel.getEndAt())) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body("Data de início deve ser menor do que a data de término");
                 }
             } else if (taskModel.getStartAt() != null) {
-                if (taskModel.getStartAt().isAfter(existingTask.getEndAt())) {
+                if (taskModel.getStartAt().after(existingTask.getEndAt())) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body("Data de início deve ser menor do que a data de término");
                 }
             } else if (taskModel.getEndAt() != null) {
-                if (existingTask.getStartAt().isAfter(taskModel.getEndAt())) {
+                if (existingTask.getStartAt().after(taskModel.getEndAt())) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body("Data de início deve ser menor do que a data de término");
                 }
@@ -99,6 +97,103 @@ public class TaskController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro ao atualizar tarefa: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable String id, HttpServletRequest request) {
+        try {
+            // Verificar se a tarefa existe
+            var taskOptional = this.taskRepository.findById(id);
+            if (taskOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Tarefa não encontrada");
+            }
+
+            // Verificar se o usuário é o proprietário da tarefa
+            var idUser = request.getAttribute("idUser");
+            if (idUser == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Usuário não identificado");
+            }
+            
+            TaskModel task = taskOptional.get();
+            if (!task.getIdUser().equals(idUser.toString())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Usuário não tem permissão para excluir esta tarefa");
+            }
+
+            // Excluir a tarefa
+            this.taskRepository.deleteById(id);
+            
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body("Tarefa excluída com sucesso");
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro ao excluir tarefa: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Endpoint para alternar o status de conclusão de uma tarefa
+     * @param id ID da tarefa a ser atualizada
+     * @param request Requisição HTTP com os dados do usuário autenticado
+     * @param statusUpdate Body da requisição com o status de conclusão (completed: true/false)
+     * @return Tarefa atualizada ou mensagem de erro
+     */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> toggleTaskStatus(
+            @PathVariable String id,
+            HttpServletRequest request,
+            @RequestBody Map<String, Boolean> statusUpdate) {
+        
+        try {
+            // Verificar se a tarefa existe
+            var taskOptional = this.taskRepository.findById(id);
+            if (taskOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Tarefa não encontrada");
+            }
+
+            // Verificar se o usuário é o proprietário da tarefa
+            var idUser = request.getAttribute("idUser");
+            if (idUser == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Usuário não identificado");
+            }
+            
+            TaskModel task = taskOptional.get();
+            if (!task.getIdUser().equals(idUser.toString())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Usuário não tem permissão para atualizar esta tarefa");
+            }
+
+            // Obter o novo status a partir do corpo da requisição
+            Boolean completed = statusUpdate.get("completed");
+            if (completed == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("O campo 'completed' é obrigatório");
+            }
+            
+            // Atualizar o status da tarefa
+            task.setCompleted(completed);
+            
+            // Se a tarefa foi marcada como concluída, registrar a data atual
+            if (completed) {
+                task.setCompletedAt(new Date());
+            } else {
+                task.setCompletedAt(null); // Limpar a data de conclusão se a tarefa for desmarcada
+            }
+
+            // Salvar as alterações
+            TaskModel updatedTask = this.taskRepository.save(task);
+            
+            return ResponseEntity.ok(updatedTask);
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro ao atualizar status da tarefa: " + e.getMessage());
         }
     }
 }

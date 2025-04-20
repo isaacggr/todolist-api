@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TodoList</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <span class="material-icons">check_circle</span>
+            <h1>TodoList</h1>
+        </div>
+        <div class="nav-buttons">
+            <button id="btnEntrar" class="btn-secondary">Entrar</button>
+            <button id="btnCadastrar" class="btn-primary">Cadastrar</button>
+        </div>
+    </header>
+
+    <!-- Página inicial -->
+    <div class="container" id="homePage">
+        <div class="welcome-container">
+            <h2>Bem-vindo ao TodoList</h2>
+            <p>Faça login ou cadastre-se para começar a gerenciar suas tarefas.</p>
+            <div class="illustration">
+                <img src="https://cdn-icons-png.flaticon.com/512/2098/2098402.png" alt="Ilustração de lista de tarefas">
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário de Login -->
+    <div class="container" id="loginPage" style="display: none;">
+        <div class="form-container">
+            <h2>Entrar</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Usuário</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Senha</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn-primary">Entrar</button>
+                <p class="form-link">Não tem uma conta? <a href="#" id="showRegister">Cadastre-se</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Formulário de Cadastro -->
+    <div class="container" id="registerPage" style="display: none;">
+        <div class="form-container">
+            <h2>Cadastrar</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerName">Nome</label>
+                    <input type="text" id="registerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerUsername">Usuário</label>
+                    <input type="text" id="registerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Senha</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button type="submit" class="btn-primary">Cadastrar</button>
+                <p class="form-link">Já tem uma conta? <a href="#" id="showLogin">Faça login</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard de Tarefas -->
+    <div class="container" id="dashboardPage" style="display: none;">
+        <div class="dashboard">
+            <div class="sidebar">
+                <div class="user-info">
+                    <span class="material-icons">account_circle</span>
+                    <span id="userName">Usuário</span>
+                </div>
+                <nav>
+                    <ul>
+                        <li class="active" data-filter="todas"><span class="material-icons">list</span> Todas as tarefas</li>
+                        <li data-filter="concluidas"><span class="material-icons">done_all</span> Concluídas</li>
+                        <li data-filter="prioritarias"><span class="material-icons">priority_high</span> Prioritárias</li>
+                    </ul>
+                </nav>
+            </div>
+            
+            <div class="main-content">
+                <div class="tasks-header">
+                    <h2>Minhas Tarefas</h2>
+                    <button id="showAddTask" class="btn-primary">
+                        <span class="material-icons">add</span> Nova Tarefa
+                    </button>
+                </div>
+
+                <!-- Formulário de Adição de Tarefa -->
+                <div id="addTaskForm" class="add-task-form" style="display: none;">
+                    <form id="taskForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="taskTitle">Título</label>
+                                <input type="text" id="taskTitle" maxlength="50" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="taskPriority">Prioridade</label>
+                                <select id="taskPriority" required>
+                                    <option value="">Selecione</option>
+                                    <option value="BAIXA">Baixa</option>
+                                    <option value="MEDIA">Média</option>
+                                    <option value="ALTA">Alta</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="taskDescription">Descrição</label>
+                            <textarea id="taskDescription" rows="3" maxlength="255" required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="taskStartAt">Data de início</label>
+                                <input type="datetime-local" id="taskStartAt" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="taskEndAt">Data de término</label>
+                                <input type="datetime-local" id="taskEndAt" required>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="cancelTask" class="btn-secondary">Cancelar</button>
+                            <button type="submit" class="btn-primary" data-mode="add">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Lista de Tarefas -->
+                <div class="tasks-list" id="tasksList">
+                    <!-- As tarefas serão inseridas aqui via JavaScript -->
+                    <div class="empty-state" id="emptyTasks">
+                        <img src="https://cdn-icons-png.flaticon.com/512/5058/5058432.png" alt="Sem tarefas">
+                        <p>Você não possui tarefas cadastradas</p>
+                        <button id="createFirstTask" class="btn-primary">Criar primeira tarefa</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 TodoList App. Todos os direitos reservados.</p>
+    </footer>
+
+    <div id="notification" class="notification"></div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 package com.isaacggr.todolist.task;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -25,17 +25,23 @@ public class TaskModel {
     private String description;
 
     @NotNull(message = "A data de início é obrigatória")
-    private LocalDateTime startAt;
+    private Date startAt;
 
     @NotNull(message = "A data de término é obrigatória")
-    private LocalDateTime endAt;
+    private Date endAt;
 
     @NotBlank(message = "A prioridade é obrigatória")
     private String priority;
 
     private String idUser;
 
-    private LocalDateTime createdAt;
+    private Date createdAt;
+    
+    // Novo campo para indicar se a tarefa está concluída
+    private boolean completed = false;
+    
+    // Data em que a tarefa foi concluída
+    private Date completedAt;
 
     public void setTitle(String title) {
         if (title != null && title.length() > 50) {
